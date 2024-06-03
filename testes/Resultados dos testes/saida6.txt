@@ -1,0 +1,37 @@
+=== SOURCE CODE ===
+numero = 5
+
+if numero > 0:
+    print("O número é positivo")
+elif numero < 0:
+    print("O número é negativo")
+else:
+    print("O número é zero")
+=== END SOURCE CODE ===
+
+Código Intermédio (Three Address Code):
+_entry:
+	t0 = to_float 5
+	numero = t0
+	t1 = to_float 0
+	t2 = numero > t1
+	if_not t2 goto _L1
+	push_param "O número é positivo"
+	print
+	goto _L0
+_L1:
+	t3 = to_float 0
+	t4 = numero < t3
+	if_not t4 goto _L2
+	push_param "O número é negativo"
+	print
+	goto _L0
+_L2:
+	push_param "O número é zero"
+	print
+_L0:
+
+Código Intermédio Otimizado:
+_entry:
+	push_param "O número é positivo"
+	print

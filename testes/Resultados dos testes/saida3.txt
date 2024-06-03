@@ -1,0 +1,108 @@
+=== SOURCE CODE ===
+# exemplo 3
+# média de uma lista de valores positivos
+def float avg (int[] list):
+    int sum = 0
+    for i in list:
+        sum = sum + i
+    return sum/size(list)
+
+int[] n
+int x = 1
+while x != 0:
+    x = input("Introduza valor inteiro positivo, para terminar, escreva 0")
+    if x!= 0:
+        add(n,0,x)
+print("Média da lista é ",avg(n))
+=== END SOURCE CODE ===
+
+Código Intermédio (Three Address Code):
+func_avg:
+	begin_function 1
+	list = pop_param
+	sum = 0
+	t1 = 0
+	t2 = list_size list
+	t3 = 1
+_L0:
+	t0 = t1 < t2
+	if_not t0 goto _L1
+	t4 = t1 * 4
+	t5 = list + t4
+	i = *t5
+	t6 = sum + i
+	sum = t6
+_L2:
+	t7 = t1 + t3
+	t1 = t7
+	goto _L0
+_L1:
+	t8 = list_size list
+	t9 = to_float sum
+	t10 = to_float t8
+	t11 = t9 / t10
+	return t11
+	end_function
+_entry:
+	n = list_new 0
+	x = 1
+_L3:
+	t12 = x != 0
+	if_not t12 goto _L4
+	push_param "Introduza valor inteiro positivo, para terminar, escreva 0"
+	x = input
+	t13 = x != 0
+	if_not t13 goto _L5
+	list_add n 0 x
+_L5:
+	goto _L3
+_L4:
+	push_param n
+	t14 = call func_avg
+	push_param t14
+	push_param "Média da lista é "
+	print
+
+Código Intermédio Otimizado:
+_entry:
+	n = list_new 0
+	x = 1
+_L3:
+	t12 = x != 0
+	if_not t12 goto _L4
+	push_param "Introduza valor inteiro positivo, para terminar, escreva 0"
+	x = input
+	t13 = x != 0
+	if_not t13 goto _L5
+	list_add n 0 x
+_L5:
+	goto _L3
+_L4:
+	push_param n
+	t14 = call func_avg
+	push_param t14
+	push_param "Média da lista é "
+	print
+func_avg:
+	begin_function 1
+	list = pop_param
+	sum = 0
+	t1 = 0
+	t2 = list_size list
+	t3 = 1
+_L0:
+	t0 = t1 < t2
+	if_not t0 goto _L1
+	i = *t5
+	t6 = sum + i
+	sum = t6
+	t7 = t1 + t3
+	t1 = t7
+	goto _L0
+_L1:
+	t8 = list_size list
+	t9 = to_float sum
+	t10 = to_float t8
+	t11 = t9 / t10
+	return t11
+	end_function

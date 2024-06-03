@@ -1,0 +1,33 @@
+=== SOURCE CODE ===
+for i in range(1, 11):
+    print(i)
+=== END SOURCE CODE ===
+
+Código Intermédio (Three Address Code):
+_entry:
+	i = 1
+	t1 = 1
+_L0:
+	t0 = i < 11
+	if_not t0 goto _L1
+	push_param i
+	print
+_L2:
+	t2 = i + t1
+	i = t2
+	goto _L0
+_L1:
+
+Código Intermédio Otimizado:
+_entry:
+	i = 1
+	t1 = 1
+_L0:
+	t0 = i < 11
+	if_not t0 goto _L1
+	push_param i
+	print
+	t2 = i + t1
+	i = t2
+	goto _L0
+_L1:

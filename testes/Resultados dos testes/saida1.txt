@@ -1,0 +1,64 @@
+=== SOURCE CODE ===
+# exemplo 1
+# fatorial versão recursiva
+int n = input("introduza um valor inteiro não negativo")
+
+def int fact (int k):
+    if k <= 1:
+        return 1
+    else:
+        return k * fact (k - 1)
+
+print(n, "! = ", fact(n))
+=== END SOURCE CODE ===
+
+Código Intermédio (Three Address Code):
+func_fact:
+	begin_function 1
+	k = pop_param
+	t0 = k <= 1
+	if_not t0 goto _L1
+	return 1
+	goto _L0
+_L1:
+	t1 = k - 1
+	push_param t1
+	t2 = call func_fact
+	t3 = k * t2
+	return t3
+_L0:
+	end_function
+_entry:
+	push_param "introduza um valor inteiro não negativo"
+	n = input
+	push_param n
+	t4 = call func_fact
+	push_param t4
+	push_param "! = "
+	push_param n
+	print
+
+Código Intermédio Otimizado:
+_entry:
+	push_param "introduza um valor inteiro não negativo"
+	n = input
+	push_param n
+	t4 = call func_fact
+	push_param t4
+	push_param n
+	print
+func_fact:
+	begin_function 1
+	k = pop_param
+	t0 = k <= 1
+	if_not t0 goto _L1
+	return 1
+	goto _L0
+_L1:
+	t1 = k - 1
+	push_param t1
+	t2 = call func_fact
+	t3 = k * t2
+	return t3
+_L0:
+	end_function

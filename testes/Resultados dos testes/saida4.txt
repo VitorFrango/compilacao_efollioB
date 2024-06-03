@@ -1,0 +1,25 @@
+=== SOURCE CODE ===
+
+def calcular_area_retangulo(base, altura):
+    return base * altura
+=== END SOURCE CODE ===
+
+Código Intermédio (Three Address Code):
+func_calcular_area_retangulo:
+	begin_function 2
+	base = pop_param
+	altura = pop_param
+	t0 = base * altura
+	return t0
+	end_function
+_entry:
+
+Código Intermédio Otimizado:
+_entry:
+func_calcular_area_retangulo:
+	begin_function 2
+	base = pop_param
+	altura = pop_param
+	t0 = base * altura
+	return t0
+	end_function
