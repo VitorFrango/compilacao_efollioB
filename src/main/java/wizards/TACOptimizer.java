@@ -33,6 +33,7 @@ public class TACOptimizer {
         }
     }
 
+    // Método para otimizar o código intermédio
     public List<String> optimizeTAC(List<String> tac) {
         mapLabelLocations(tac);
         CFG = new ArrayList<>();
@@ -45,6 +46,7 @@ public class TACOptimizer {
         return joinCFG();
     }
 
+    // Método para otimizar o código intermédio
     private void doOptimize() {
         boolean repeat = true;
         while (repeat) {
@@ -56,6 +58,7 @@ public class TACOptimizer {
         }
     }
 
+    // Método para juntar os nós do grafo de fluxo de controlo
     private List<String> joinCFG() {
         List<String> newTAC = new ArrayList<>();
 
@@ -71,6 +74,7 @@ public class TACOptimizer {
         usage.add(variable);
     }
 
+    // Método para calcular as constantes do código intermédio
     private void calculateConstants() {
         for (CFGNode node : CFG) {
             Map<String, Number> constants = new HashMap<>();
