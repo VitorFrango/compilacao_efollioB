@@ -1,4 +1,2 @@
 # compilacao_efollioB
-# compilacao_efollioB
-# compilacao_efollioB
-# compilacao_efollioB
+# compliacao_interpretacao
