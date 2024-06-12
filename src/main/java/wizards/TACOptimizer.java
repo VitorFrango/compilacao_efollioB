@@ -130,8 +130,8 @@ public class TACOptimizer {
                         foundUsage(elements[1]);
                     }
                 }
-                // OP
-                else if (elements.length == 4) {
+
+                else if (elements.length == 4) {  // Binary operation
                     Number left = getConstant(elements[1], constants);
                     Number right = getConstant(elements[3], constants);
                     if (left != null && right != null) {
@@ -207,6 +207,7 @@ public class TACOptimizer {
         return joinNodes();
     }
 
+    // Mark all nodes reachable from the root
     private void markNode(CFGNode node) {
         if (node.visited)
             return;
@@ -215,6 +216,7 @@ public class TACOptimizer {
             markNode(suc);
     }
 
+    // Join nodes with only one sucessor and one antecessor
     private boolean joinNodes() {
         int i;
         boolean has_joined = true, has_ever_joined = false;
@@ -264,6 +266,7 @@ public class TACOptimizer {
         return has_ever_joined;
     }
 
+    // Unlink nodes that are not reachable from the root
     private void unlinkIfs() {
         for (CFGNode node : CFG) {
             node.visited = false;
@@ -289,6 +292,7 @@ public class TACOptimizer {
         }
     }
 
+    // Evaluate binary operation
     private Number evaluate(Number left, String op, Number right) {
         if (left.getClass() == Integer.class) {
             return evaluateInt(left.intValue(), op, right.intValue());
@@ -296,6 +300,7 @@ public class TACOptimizer {
         return evaluateDouble(left.doubleValue(), op, right.doubleValue());
     }
 
+    //
     private Integer evaluateInt(int left, String op, int right) {
         return switch (op) {
             case "+" -> left + right;
