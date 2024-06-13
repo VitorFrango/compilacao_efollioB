@@ -6,6 +6,8 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
 import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Locale;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +21,153 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.ArrayDeque;
+
+class TACToAssemblyConverter {
+    private List<String> assemblyCode;
+    private Map<String, String> registerMap; // Map for variable to register
+    private int registerCounter;
+
+    public TACToAssemblyConverter() {
+        assemblyCode = new ArrayList<>();
+        registerMap = new HashMap<>();
+        registerCounter = 0;
+    }
+
+    public List<String> convert(Map<String, List<String>> functionsTAC, List<String> globalTAC) {
+        // Convert global TAC
+        for (String instruction : globalTAC) {
+            convertInstruction(instruction);
+        }
+
+        // Convert functions TAC
+        for (Map.Entry<String, List<String>> entry : functionsTAC.entrySet()) {
+            for (String instruction : entry.getValue()) {
+                convertInstruction(instruction);
+            }
+        }
+
+        return assemblyCode;
+    }
+
+    private void convertInstruction(String instruction) {
+        String[] parts = instruction.trim().split("\\s+");
+        switch (parts[0]) {
+            case "goto":
+                assemblyCode.add("JMP " + parts[1]);
+                break;
+            case "if_not":
+                String condition = parts[1];
+                String label = parts[3];
+                assemblyCode.add("CMP " + getRegister(condition) + ", 0");
+                assemblyCode.add("JE " + label);
+                break;
+            case "print":
+                assemblyCode.add("CALL print");
+                break;
+            case "input":
+                assemblyCode.add("CALL input");
+                assemblyCode.add("MOV " + getRegister(parts[0]) + ", EAX");
+                break;
+            case "push_param":
+                assemblyCode.add("PUSH " + getRegister(parts[1]));
+                break;
+            case "call":
+                assemblyCode.add("CALL " + parts[2]);
+                assemblyCode.add("MOV " + getRegister(parts[0]) + ", EAX");
+                break;
+            case "return":
+                if (parts.length > 1) {
+                    assemblyCode.add("MOV EAX, " + getRegister(parts[1]));
+                }
+                assemblyCode.add("RET");
+                break;
+            case "list_size":
+                assemblyCode.add("MOV " + getRegister(parts[0]) + ", [" + parts[2] + ".size]");
+                break;
+            case "list_add":
+                assemblyCode.add("MOV [" + parts[1] + "+" + getRegister(parts[2]) + "], " + getRegister(parts[3]));
+                break;
+            case "list_remove":
+                assemblyCode.add("CALL list_remove"); // Placeholder for actual implementation
+                break;
+            default:
+                if (parts[1].equals("=")) {
+                    if (parts.length == 3) { // Simple assignment
+                        assemblyCode.add("MOV " + getRegister(parts[0]) + ", " + getRegister(parts[2]));
+                    } else if (parts.length == 5) { // Binary operation
+                        String op = convertOperator(parts[3]);
+                        assemblyCode.add(op + " " + getRegister(parts[0]) + ", " + getRegister(parts[2]) + ", " + getRegister(parts[4]));
+                    }
+                }
+                break;
+        }
+    }
+
+    private String getRegister(String variable) {
+        return registerMap.computeIfAbsent(variable, k -> "R" + registerCounter++);
+    }
+
+    private String convertOperator(String op) {
+        return switch (op) {
+            case "+" -> "ADD";
+            case "-" -> "SUB";
+            case "*" -> "IMUL";
+            case "/" -> "IDIV";
+            default -> throw new IllegalArgumentException("Operador desconhecido: " + op);
+        };
+    }
+
+    public List<String> getAssemblyCode() {
+        return assemblyCode;
+    }
+
+    public static void main(String[] args) {
+        // Exemplo de uso
+        TACGenerator tacGenerator = new TACGenerator();
+
+        // Lendo o código-fonte MontPy a partir de um arquivo
+        String sourceFilePath = "src/main/resources/exemplo.mpy"; // Substitua pelo caminho real do arquivo MontPy
+
+        try {
+            InputStream sourceCode = new FileInputStream(sourceFilePath);
+            tacGenerator.generateTACFromSource(sourceCode);
+        } catch (FileNotFoundException e) {
+            System.err.println("Arquivo não encontrado: " + sourceFilePath);
+            e.printStackTrace();
+            return;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        // Exibir o TAC gerado
+        List<String> globalTAC = tacGenerator.getGlobalTAC();
+        Map<String, List<String>> functionsTAC = tacGenerator.getFunctionsTAC();
+
+        System.out.println("TAC Global:");
+        for (String line : globalTAC) {
+            System.out.println(line);
+        }
+
+        System.out.println("\nTAC de Funções:");
+        for (Map.Entry<String, List<String>> entry : functionsTAC.entrySet()) {
+            System.out.println("Função " + entry.getKey() + ":");
+            for (String line : entry.getValue()) {
+                System.out.println(line);
+            }
+        }
+
+        // Converter TAC para Assembly
+        TACToAssemblyConverter converter = new TACToAssemblyConverter();
+        List<String> assemblyCode = converter.convert(functionsTAC, globalTAC);
+
+        // Exibir o código Assembly gerado
+        System.out.println("\nCódigo Assembly:");
+        for (String line : assemblyCode) {
+            System.out.println(line);
+        }
+    }
+}
 
 enum ValueType {
     INT,
@@ -298,8 +447,7 @@ public class TACGenerator extends MontPyBaseVisitor<ExprType> {
             if (ctx.OPEN_BRACKET() != null) {
                 ExprType pos = visit(ctx.expression());
                 String pointer = accessArrayPos(id_str, pos.id());
-                ExprType result = null;
-                result = switch (getSymbolType(id_str)) {
+                ExprType result = switch (getSymbolType(id_str)) {
                     case LIST_FLOAT -> newTemp(ValueType.FLOAT);
                     case LIST_INT -> newTemp(ValueType.INT);
                     default -> {
@@ -338,7 +486,7 @@ public class TACGenerator extends MontPyBaseVisitor<ExprType> {
             if (pos.type() != ValueType.INT)
                 SyntaxError(ctx.getStart().getLine(), "Parâmetro pos da função %s não é inteiro.", function_name);
             if (list_type == ValueType.LIST_INT && element.type() != ValueType.INT)
-               SyntaxError(ctx.getStart().getLine(), "Elemento %s não é inteiro.", element.id());
+                SyntaxError(ctx.getStart().getLine(), "Elemento %s não é inteiro.", element.id());
             if (list_type == ValueType.LIST_FLOAT)
                 element = convertToFloat(element);
             instructionListAdd(id, pos.id(), element.id());
@@ -462,7 +610,6 @@ public class TACGenerator extends MontPyBaseVisitor<ExprType> {
         if (ctx.OPEN_BRACKET() != null) {
             if (!hasSymbol(id)) {
                 SyntaxError(ctx.getStart().getLine(), "Variável %s não existe.\n", id);
-                System.exit(1);
             }
             variable = new ExprType(id, getSymbolType(id));
             if (!LIST_TYPES.contains(variable.type()))
@@ -713,4 +860,3 @@ public class TACGenerator extends MontPyBaseVisitor<ExprType> {
         };
     }
 }
-

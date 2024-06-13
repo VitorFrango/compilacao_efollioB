@@ -1,0 +1,6 @@
+
+def add(a: float, b: float) -> float:
+    return a + b
+
+x: float = add(3.5, 2.5)
+print(x)

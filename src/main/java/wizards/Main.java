@@ -1,65 +1,59 @@
 package wizards;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
+import montpy.*;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.*;
+
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Map;
 
-
-// Classe principal do programa
 public class Main {
-    // Método principal do programa
     public static void main(String[] args) {
-        // Verifica se o caminho do arquivo de teste foi fornecido
-        String inputFile;
-        if (args.length != 1) {
-            System.err.println("Uso: java TACGenerator <caminho_para_arquivo_de_teste>"); // Mensagem de erro
-            System.exit(1); // Encerra o programa
-        }
-        inputFile = args[0];
+        // Exemplo de uso
+        TACGenerator tacGenerator = new TACGenerator();
 
-        TACGenerator tac = new TACGenerator(); // Instância da classe TACGenerator
-        TACOptimizer optimizer = new TACOptimizer(); // Instância da classe TACOptimizer
-        try { // Tratamento de exceções
-            //printTokens(inputFile);
-            printFile(new FileInputStream(inputFile));  //
-            tac.generateTACFromSource(new FileInputStream(inputFile));
-        } catch (Exception e) { // Tratamento de exceções
+        // Lendo o código-fonte MontPy a partir de um arquivo
+        String sourceFilePath = "src/main/resources/exemplo.mpy"; // Substitua pelo caminho real do arquivo MontPy
+        try {
+            InputStream sourceCode = new FileInputStream(sourceFilePath);
+            tacGenerator.generateTACFromSource(sourceCode);
+        } catch (FileNotFoundException e) {
+            System.err.println("Arquivo não encontrado: " + sourceFilePath);
             e.printStackTrace();
-            System.exit(1);
+            return;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
         }
 
-        // Imprime o código intermédio gerado
-        System.out.println("Código Intermédio (Three Address Code):");
+        // Exibir o TAC gerado
+        List<String> globalTAC = tacGenerator.getGlobalTAC();
+        Map<String, List<String>> functionsTAC = tacGenerator.getFunctionsTAC();
 
-        // Imprime o código intermédio gerado
-        tac.getFunctionsTAC().forEach((fn, localTAC) -> {
-            localTAC.forEach(code -> System.out.println(code));
-        });
-        tac.getGlobalTAC().forEach(code -> System.out.println(code));
-
-        // Otimização do código intermédio e impressão do código otimizado
-        System.out.println("\nCódigo Intermédio Otimizado:");
-        List<String> optimizedTAC = optimizer.optimizeTAC(tac.getGlobalTAC());
-        optimizedTAC.forEach(System.out::println);
-        for (var localTAC: tac.getFunctionsTAC().values()) {
-            optimizedTAC = optimizer.optimizeTAC(localTAC); // Otimização do código intermédio
-            optimizedTAC.forEach(System.out::println);
+        System.out.println("TAC Global:");
+        for (String line : globalTAC) {
+            System.out.println(line);
         }
-    }
 
-    // Método para imprimir o conteúdo do arquivo de teste
-    public static void printFile(InputStream inputFile) throws IOException {
-        System.out.println("=== SOURCE CODE ===");
-        // Leitura do arquivo de teste
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputFile))) {
-            String line;
-            while ((line = br.readLine()) != null) {
+        System.out.println("\nTAC de Funções:");
+        for (Map.Entry<String, List<String>> entry : functionsTAC.entrySet()) {
+            System.out.println("Função " + entry.getKey() + ":");
+            for (String line : entry.getValue()) {
                 System.out.println(line);
             }
         }
-        System.out.println("=== END SOURCE CODE ===\n");
+
+        // Converter TAC para Assembly
+        TACToAssemblyConverter converter = new TACToAssemblyConverter();
+        List<String> assemblyCode = converter.convert(functionsTAC, globalTAC);
+
+        // Exibir o código Assembly gerado
+        System.out.println("\nCódigo Assembly:");
+        for (String line : assemblyCode) {
+            System.out.println(line);
+        }
     }
 }
