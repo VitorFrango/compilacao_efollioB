@@ -1,0 +1,15 @@
+# exemplo 3
+# média de uma lista de valores positivos
+def float avg (int[] list):
+    int sum = 0
+    for i in list:
+        sum = sum + i
+    return sum / size(list)
+
+int[] n
+int x = 1
+while x != 0:
+    x = input("Introduza valor inteiro positivo, para terminar, escreva 0")
+    if x != 0:
+        add(n, 0, x)
+print("Média da lista é ", avg(n))

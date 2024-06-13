@@ -1,59 +1,67 @@
 package wizards;
 
-import montpy.*;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
-
-import java.io.InputStream;
+import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
-        // Exemplo de uso
-        TACGenerator tacGenerator = new TACGenerator();
+        // Verifica se o caminho do arquivo de teste foi fornecido
+        String inputFile;
+        if (args.length != 1) {
+            System.err.println("Uso: java -jar target/efoliob-1.0-jar-with-dependencies.jar <caminho_para_arquivo_de_teste>");
+            System.exit(1);
+        }
+        inputFile = args[0];
 
-        // Lendo o código-fonte MontPy a partir de um arquivo
-        String sourceFilePath = "src/main/resources/exemplo.mpy"; // Substitua pelo caminho real do arquivo MontPy
+        TACGenerator tac = new TACGenerator();
+        TACOptimizer optimizer = new TACOptimizer();
         try {
-            InputStream sourceCode = new FileInputStream(sourceFilePath);
-            tacGenerator.generateTACFromSource(sourceCode);
-        } catch (FileNotFoundException e) {
-            System.err.println("Arquivo não encontrado: " + sourceFilePath);
-            e.printStackTrace();
-            return;
+            //printTokens(inputFile);
+            printFile(new FileInputStream(inputFile));
+            tac.generateTACFromSource(new FileInputStream(inputFile));
         } catch (Exception e) {
             e.printStackTrace();
-            return;
+            System.exit(1);
         }
 
-        // Exibir o TAC gerado
-        List<String> globalTAC = tacGenerator.getGlobalTAC();
-        Map<String, List<String>> functionsTAC = tacGenerator.getFunctionsTAC();
+        System.out.println("Código Intermédio (Three Address Code):");
 
-        System.out.println("TAC Global:");
-        for (String line : globalTAC) {
-            System.out.println(line);
-        }
+        tac.getFunctionsTAC().forEach((fn, localTAC) -> {
+            System.out.println("Função " + fn + ":");
+            localTAC.forEach(code -> System.out.println(code));
+        });
+        tac.getGlobalTAC().forEach(code -> System.out.println(code));
 
-        System.out.println("\nTAC de Funções:");
-        for (Map.Entry<String, List<String>> entry : functionsTAC.entrySet()) {
-            System.out.println("Função " + entry.getKey() + ":");
-            for (String line : entry.getValue()) {
-                System.out.println(line);
-            }
+        System.out.println("\nCódigo Intermédio Otimizado:");
+        List<String> optimizedTAC = optimizer.optimizeTAC(tac.getGlobalTAC());
+        optimizedTAC.forEach(System.out::println);
+        for (var entry : tac.getFunctionsTAC().entrySet()) {
+            System.out.println("Função " + entry.getKey() + " (otimizada):");
+            optimizedTAC = optimizer.optimizeTAC(entry.getValue());
+            optimizedTAC.forEach(System.out::println);
         }
 
         // Converter TAC para Assembly
         TACToAssemblyConverter converter = new TACToAssemblyConverter();
-        List<String> assemblyCode = converter.convert(functionsTAC, globalTAC);
+        List<String> assemblyCode = converter.convert(tac.getFunctionsTAC(), tac.getGlobalTAC());
 
-        // Exibir o código Assembly gerado
-        System.out.println("\nCódigo Assembly:");
-        for (String line : assemblyCode) {
-            System.out.println(line);
+        System.out.println("\nCódigo Assembly Gerado:");
+        assemblyCode.forEach(System.out::println);
+    }
+
+    public static void printFile(InputStream inputFile) throws IOException {
+        System.out.println("=== SOURCE CODE ===");
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
         }
+        System.out.println("=== END SOURCE CODE ===\n");
     }
 }

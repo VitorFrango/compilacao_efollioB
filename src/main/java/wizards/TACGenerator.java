@@ -6,8 +6,6 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
 import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.Locale;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.ArrayDeque;
 
+// class que converte código TAC para Assembly
 class TACToAssemblyConverter {
     private List<String> assemblyCode;
     private Map<String, String> registerMap; // Map for variable to register
@@ -33,6 +32,7 @@ class TACToAssemblyConverter {
         registerCounter = 0;
     }
 
+    // Converte o código TAC para Assembly
     public List<String> convert(Map<String, List<String>> functionsTAC, List<String> globalTAC) {
         // Convert global TAC
         for (String instruction : globalTAC) {
@@ -49,8 +49,19 @@ class TACToAssemblyConverter {
         return assemblyCode;
     }
 
+    // Converte uma instrução TAC para Assembly
     private void convertInstruction(String instruction) {
+        if (instruction == null || instruction.trim().isEmpty()) {
+            System.err.println("Instrução vazia ou nula recebida.");
+            return;
+        }
         String[] parts = instruction.trim().split("\\s+");
+        // Antes de qualquer lógica de processamento, verificar se a instrução está completa
+        if (parts.length < getExpectedParts(parts[0])) {
+            System.err.println("Erro: Instrução incompleta ou malformada: " + instruction);
+            return; // ou lançar uma exceção, se apropriado
+        }
+
         switch (parts[0]) {
             case "goto":
                 assemblyCode.add("JMP " + parts[1]);
@@ -61,19 +72,15 @@ class TACToAssemblyConverter {
                 assemblyCode.add("CMP " + getRegister(condition) + ", 0");
                 assemblyCode.add("JE " + label);
                 break;
-            case "print":
-                assemblyCode.add("CALL print");
-                break;
-            case "input":
-                assemblyCode.add("CALL input");
-                assemblyCode.add("MOV " + getRegister(parts[0]) + ", EAX");
-                break;
-            case "push_param":
-                assemblyCode.add("PUSH " + getRegister(parts[1]));
+            case "list_new":
+                assemblyCode.add("CALL malloc");
+                assemblyCode.add("MOV " + getRegister(parts[1]) + ", EAX");
                 break;
             case "call":
                 assemblyCode.add("CALL " + parts[2]);
-                assemblyCode.add("MOV " + getRegister(parts[0]) + ", EAX");
+                if (parts.length > 3) {
+                    assemblyCode.add("MOV " + getRegister(parts[1]) + ", EAX");
+                }
                 break;
             case "return":
                 if (parts.length > 1) {
@@ -82,93 +89,98 @@ class TACToAssemblyConverter {
                 assemblyCode.add("RET");
                 break;
             case "list_size":
-                assemblyCode.add("MOV " + getRegister(parts[0]) + ", [" + parts[2] + ".size]");
+                assemblyCode.add("MOV " + getRegister(parts[0]) + ", [" + getRegister(parts[2]) + ".size]");
                 break;
             case "list_add":
-                assemblyCode.add("MOV [" + parts[1] + "+" + getRegister(parts[2]) + "], " + getRegister(parts[3]));
-                break;
-            case "list_remove":
-                assemblyCode.add("CALL list_remove"); // Placeholder for actual implementation
+                assemblyCode.add("MOV [" + getRegister(parts[1]) + " + " + getRegister(parts[2]) + "], " + getRegister(parts[3]));
                 break;
             default:
-                if (parts[1].equals("=")) {
-                    if (parts.length == 3) { // Simple assignment
-                        assemblyCode.add("MOV " + getRegister(parts[0]) + ", " + getRegister(parts[2]));
-                    } else if (parts.length == 5) { // Binary operation
-                        String op = convertOperator(parts[3]);
-                        assemblyCode.add(op + " " + getRegister(parts[0]) + ", " + getRegister(parts[2]) + ", " + getRegister(parts[4]));
-                    }
-                }
+                handleDefaultCase(parts, instruction);
                 break;
         }
     }
 
+    private int getExpectedParts(String instructionType) {
+        switch (instructionType) {
+            case "goto":
+            case "call":
+            case "return":
+                return 2;
+            case "if_not":
+                return 4;
+            case "list_new":
+                return 3;
+            case "list_size":
+            case "list_add":
+                return 4;
+            default:
+                return 2; // Valor padrão para a maioria das instruções
+        }
+    }
+
+    private void handleDefaultCase(String[] parts, String instruction) {
+        if (parts.length > 1 && parts[1].equals("=")) {
+            if (parts.length == 3) {
+                assemblyCode.add("MOV " + getRegister(parts[0]) + ", " + getRegister(parts[2]));
+            } else if (parts.length == 5) {
+                String op = convertOperator(parts[3]);
+                assemblyCode.add(op + " " + getRegister(parts[0]) + ", " + getRegister(parts[2]) + ", " + getRegister(parts[4]));
+            } else {
+                System.err.println("Instrução de atribuição malformada: " + instruction);
+            }
+        } else {
+            System.err.println("Instrução desconhecida ou malformada: " + instruction);
+        }
+    }
+
+    private void validateParts(String[] parts, int expectedLength) {
+        // Permite instruções com uma única parte para etiquetas e operações específicas.
+        if (parts.length < expectedLength) {
+            if (parts.length == 1 && (parts[0].endsWith(":") || parts[0].equals("end_function"))) {
+                return;  // Aceita instruções válidas com apenas uma parte.
+            }
+            throw new IllegalArgumentException("Instrução incompleta: esperados " + expectedLength + " partes, mas encontrado " + parts.length);
+        }
+    }
+
+    // Retorna o registrador associado a uma variável
     private String getRegister(String variable) {
-        return registerMap.computeIfAbsent(variable, k -> "R" + registerCounter++);
+        return registerMap.computeIfAbsent(variable, k -> "R" + (registerCounter++));
     }
 
+    // Converte um operador TAC para Assembly
     private String convertOperator(String op) {
-        return switch (op) {
-            case "+" -> "ADD";
-            case "-" -> "SUB";
-            case "*" -> "IMUL";
-            case "/" -> "IDIV";
-            default -> throw new IllegalArgumentException("Operador desconhecido: " + op);
-        };
+        switch (op) {
+            case "+":
+                return "ADD";
+            case "-":
+                return "SUB";
+            case "*":
+                return "IMUL";
+            case "/":
+                return "IDIV";
+            case "!=":
+                return "CMP";  // Suporte para o operador de desigualdade
+            case "<":
+                return "JL";   // Suporte para o operador de menor que
+            case ">":
+                return "JG";   // Suporte para o operador de maior que
+            case "<=":
+                return "JLE";  // Suporte para o operador de menor ou igual
+            case ">=":
+                return "JGE";  // Suporte para o operador de maior ou igual
+            default:
+                throw new IllegalArgumentException("Operador desconhecido: " + op);
+        }
     }
 
+    // Retorna o código Assembly gerado
     public List<String> getAssemblyCode() {
         return assemblyCode;
     }
-
-    public static void main(String[] args) {
-        // Exemplo de uso
-        TACGenerator tacGenerator = new TACGenerator();
-
-        // Lendo o código-fonte MontPy a partir de um arquivo
-        String sourceFilePath = "src/main/resources/exemplo.mpy"; // Substitua pelo caminho real do arquivo MontPy
-
-        try {
-            InputStream sourceCode = new FileInputStream(sourceFilePath);
-            tacGenerator.generateTACFromSource(sourceCode);
-        } catch (FileNotFoundException e) {
-            System.err.println("Arquivo não encontrado: " + sourceFilePath);
-            e.printStackTrace();
-            return;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // Exibir o TAC gerado
-        List<String> globalTAC = tacGenerator.getGlobalTAC();
-        Map<String, List<String>> functionsTAC = tacGenerator.getFunctionsTAC();
-
-        System.out.println("TAC Global:");
-        for (String line : globalTAC) {
-            System.out.println(line);
-        }
-
-        System.out.println("\nTAC de Funções:");
-        for (Map.Entry<String, List<String>> entry : functionsTAC.entrySet()) {
-            System.out.println("Função " + entry.getKey() + ":");
-            for (String line : entry.getValue()) {
-                System.out.println(line);
-            }
-        }
-
-        // Converter TAC para Assembly
-        TACToAssemblyConverter converter = new TACToAssemblyConverter();
-        List<String> assemblyCode = converter.convert(functionsTAC, globalTAC);
-
-        // Exibir o código Assembly gerado
-        System.out.println("\nCódigo Assembly:");
-        for (String line : assemblyCode) {
-            System.out.println(line);
-        }
-    }
 }
 
+// Definição do ValueType e ExprType
 enum ValueType {
     INT,
     FLOAT,
@@ -188,9 +200,9 @@ enum ValueType {
     }
 }
 
-record ExprType(String id, ValueType type) {
-}
+record ExprType(String id, ValueType type) {}
 
+// Classe que gera o código TAC a partir de um código-fonte MontPy
 public class TACGenerator extends MontPyBaseVisitor<ExprType> {
     private Map<String, List<String>> functionsTAC;
     private List<String> globalTAC;
@@ -447,7 +459,8 @@ public class TACGenerator extends MontPyBaseVisitor<ExprType> {
             if (ctx.OPEN_BRACKET() != null) {
                 ExprType pos = visit(ctx.expression());
                 String pointer = accessArrayPos(id_str, pos.id());
-                ExprType result = switch (getSymbolType(id_str)) {
+                ExprType result = null;
+                result = switch (getSymbolType(id_str)) {
                     case LIST_FLOAT -> newTemp(ValueType.FLOAT);
                     case LIST_INT -> newTemp(ValueType.INT);
                     default -> {
@@ -728,7 +741,9 @@ public class TACGenerator extends MontPyBaseVisitor<ExprType> {
             }
             symbolTable.peekFirst().put(id, variableValueType);
         } else if (!hasSymbol(id)) {
-            SyntaxError(ctx.getStart().getLine(), "Input para variável %s inexistente.", id);
+            // Criar variável implícita caso não exista
+            variableValueType = ValueType.FLOAT;  // Tipo padrão
+            symbolTable.peekFirst().put(id, variableValueType);
         }
         ExprType result = new ExprType(id, getSymbolType(id));
         instructionPush(value.id());
@@ -858,5 +873,47 @@ public class TACGenerator extends MontPyBaseVisitor<ExprType> {
             case FLOAT -> convertToFloat(value);
             default -> null;
         };
+    }
+
+    public static void main(String[] args) {
+
+        TACGenerator tacGenerator = new TACGenerator();
+
+        // Simulando a leitura do código-fonte MontPy a partir de um InputStream
+        InputStream sourceCode = System.in; // Exemplo: ler a partir da entrada padrão
+
+        try {
+            tacGenerator.generateTACFromSource(sourceCode);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        // Exibir o TAC gerado
+        List<String> globalTAC = tacGenerator.getGlobalTAC();
+        Map<String, List<String>> functionsTAC = tacGenerator.getFunctionsTAC();
+
+        System.out.println("TAC Global:");
+        for (String line : globalTAC) {
+            System.out.println(line);
+        }
+
+        System.out.println("\nTAC de Funções:");
+        for (Map.Entry<String, List<String>> entry : functionsTAC.entrySet()) {
+            System.out.println("Função " + entry.getKey() + ":");
+            for (String line : entry.getValue()) {
+                System.out.println(line);
+            }
+        }
+
+        // Converter TAC para Assembly
+        TACToAssemblyConverter converter = new TACToAssemblyConverter();
+        List<String> assemblyCode = converter.convert(functionsTAC, globalTAC);
+
+        // Exibir o código Assembly gerado
+        System.out.println("\nCódigo Assembly:");
+        for (String line : assemblyCode) {
+            System.out.println(line);
+        }
     }
 }
