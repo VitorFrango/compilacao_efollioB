@@ -3,9 +3,10 @@
 int n = input("introduza um valor inteiro não negativo: ")
 
 def int fact (int k):
-    int r = 1, k1 = k+1
-    for i in range(2,k1):
+    int r = 1
+    int k1 = k + 1
+    for i in range(2, k1):
         r = r * i
     return r
-print (n, "! = ", fact(n))
 
+print (n, "! = ", fact(n))

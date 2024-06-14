@@ -13,6 +13,7 @@ import java.util.HashSet;
 
 public class TACOptimizer {
 
+
     private Map<String, Integer> label_locations;
     private final Pattern label = Pattern.compile("([a-zA-Z_][a-zA-Z_0-9]*):");
     private final Pattern goto_pattern = Pattern.compile("goto ([a-zA-Z_][a-zA-Z_0-9]*)");
@@ -191,6 +192,7 @@ public class TACOptimizer {
             node.nodeTAC.removeIf(el -> el == null);
         }
     }
+
 
     private boolean cutUnreachableBranches() {
         unlinkIfs();
