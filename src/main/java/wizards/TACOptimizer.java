@@ -13,7 +13,6 @@ import java.util.HashSet;
 
 public class TACOptimizer {
 
-
     private Map<String, Integer> label_locations;
     private final Pattern label = Pattern.compile("([a-zA-Z_][a-zA-Z_0-9]*):");
     private final Pattern goto_pattern = Pattern.compile("goto ([a-zA-Z_][a-zA-Z_0-9]*)");
@@ -22,7 +21,6 @@ public class TACOptimizer {
     private final List<String> IGNORE_INSTRUCTIONS = List.of("begin_function", "end_function", "goto", "print");
     private final List<String> CONVERSION_OP = List.of("to_int", "to_float");
     private final List<String> BOOLEANS = List.of("true", "false");
-
 
     public void mapLabelLocations(List<String> tac) {
         label_locations = new HashMap<>();
@@ -192,7 +190,6 @@ public class TACOptimizer {
             node.nodeTAC.removeIf(el -> el == null);
         }
     }
-
 
     private boolean cutUnreachableBranches() {
         unlinkIfs();
@@ -408,5 +405,22 @@ public class TACOptimizer {
         public int compareTo(CFGNode other) {
             return Integer.compare(id, other.id);
         }
+    }
+
+    // Método para otimizar o código intermédio (novo método importado)
+    public List<String> optimize(List<String> tac) {
+        List<String> optimizedTac = new ArrayList<>();
+
+        // Código de exemplo para otimizar TAC
+        // Isso deve ser substituído pela lógica real de otimização
+        for (String line : tac) {
+            if (line.contains("print")) {
+                optimizedTac.add(line.replace("\"! = \"", "\" = \""));  // Exemplo de otimização menor
+            } else {
+                optimizedTac.add(line);
+            }
+        }
+
+        return optimizedTac;
     }
 }
