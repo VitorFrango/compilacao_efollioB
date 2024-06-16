@@ -1,15 +1,39 @@
-# exemplo 3
-# média de uma lista de valores positivos
-def float avg (int[] list):
+# Definição de uma função para calcular a média de uma lista de números
+def float avg(int[] list):
     int sum = 0
     for i in list:
         sum = sum + i
-    return sum / size(list)
+    if size(list) > 0:
+        return sum / size(list)
+    else:
+        return 0.0
 
-int[] n
-int x = 1
-while x != 0:
-    x = input("Introduza valor inteiro positivo, para terminar, escreva 0")
-    if x != 0:
-        add(n, 0, x)
-print("Média da lista é ", avg(n))
+# Programa principal
+int[] numbers = [1, 2, 3, 4, 5]
+print("A média é ", avg(numbers))
+
+# Cálculo de fatorial usando while
+def int factorial(int n):
+    int result = 1
+    while n > 1:
+        result = result * n
+        n = n - 1
+    return result
+
+int num = 5
+print("O fatorial de ", num, " é ", factorial(num))
+
+# Condições e loops adicionais
+if num > 4:
+    print("Número maior que 4")
+elif num == 4:
+    print("Número é 4")
+else:
+    print("Número menor que 4")
+
+# Input e operações com array
+int value = input("Introduza um valor inteiro para adicionar ao array: ")
+add(numbers, 0, value)  # Adiciona o valor no início da lista
+print("Novo array: ", numbers)
+
+

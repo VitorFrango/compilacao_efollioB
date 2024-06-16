@@ -13,3 +13,5 @@ while x != 0:
     if x!= 0:
         add(n,0,x)
 print("Média da lista é ",avg(n))
+
+
