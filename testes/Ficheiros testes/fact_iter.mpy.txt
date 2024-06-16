@@ -9,4 +9,5 @@ def int fact (int k):
         r = r * i
     return r
 
+
 print (n, "! = ", fact(n))

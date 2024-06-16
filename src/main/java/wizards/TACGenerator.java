@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
 import java.io.InputStream;
+
 import java.util.Locale;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,10 +15,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.HashSet;
 import java.util.EnumSet;
-
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Deque;
+
 import java.util.ArrayDeque;
 
 // Classe que converte código TAC para Assembly
