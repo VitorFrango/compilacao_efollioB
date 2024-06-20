@@ -39,4 +39,4 @@ mvn clean compile assembly:single
 2)Após esse comando, o arquivo "efoliob-1.0-jar-with-dependencies.jar" encontrar-se-á na pasta "target".
 
 3) Após isso, basta executar o comando abaixo:
-   java -jar "efoliob-1.0-jar-with-dependencies.jar" ARQUIVO_FONTE
+   java -jar "efoliob-1.0-jar-with-dependencies.jar" ARQUIVO_FONTE# Compilacao_EFOLIOC
