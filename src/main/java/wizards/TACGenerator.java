@@ -21,6 +21,7 @@ import java.util.Deque;
 
 import java.util.ArrayDeque;
 
+
 // Classe que converte código TAC para Assembly
 class TACToAssemblyConverter {
     private List<String> assemblyCode;
@@ -269,10 +270,11 @@ public class TACGenerator extends MontPyBaseVisitor<ExprType> {
         visit(tree);
     }
 
-
+    // Retorna o código TAC gerado para funções
     public List<String> getGlobalTAC() {
         return globalTAC;
     }
+
 
     public Map<String, List<String>> getFunctionsTAC() {
         return functionsTAC;

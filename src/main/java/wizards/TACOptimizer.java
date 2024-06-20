@@ -411,8 +411,8 @@ public class TACOptimizer {
     public List<String> optimize(List<String> tac) {
         List<String> optimizedTac = new ArrayList<>();
 
-        // Código de exemplo para otimizar TAC
-        // Isso deve ser substituído pela lógica real de otimização
+
+
         for (String line : tac) {
             if (line.contains("print")) {
                 optimizedTac.add(line.replace("\"! = \"", "\" = \""));  // Exemplo de otimização menor
